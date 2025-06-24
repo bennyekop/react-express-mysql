@@ -20,7 +20,7 @@ import { debounce } from 'lodash';
 
 // URL dasar API backend
 
-const API_URL = 'https://rwtest-be.petshoppatumbak.my.id/api';
+const API_URL = 'https://isidomainkamu-atau-IP/api';
 
 
 // --- Komponen Navbar (Disimplifikasi) ---
