@@ -4,8 +4,10 @@
 
 //            Semua UI dan logika login/register dihapus untuk Proof of Concept.
 
+//            Termasuk perbaikan nomor urut tabel dan optimalisasi autosearch.
 
-import React, { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import { BrowserRouter as Router, Route, Routes, Link, useNavigate, useParams, Navigate } from 'react-router-dom';
 
@@ -20,14 +22,12 @@ import { debounce } from 'lodash';
 
 // URL dasar API backend
 
-const API_URL = 'https://isidomainkamu-atau-IP/api';
+const API_URL = 'https://isidomain-atau-IP-backend/api';
 
 
 // --- Komponen Navbar (Disimplifikasi) ---
 
 const AppNavbar = () => {
-
-    // Autentikasi dihapus dari Navbar karena tidak lagi relevan di frontend ini
 
     return (
 
@@ -48,8 +48,6 @@ const AppNavbar = () => {
                     </Nav>
 
                     <Nav>
-
-                        {/* Tidak ada lagi tombol login/logout atau display user */}
 
                         <Navbar.Text className="text-muted">Mode Demo</Navbar.Text>
 
@@ -97,9 +95,9 @@ const ProductList = () => {
 
         setLoading(true);
 
-        try {
+        console.log(`Memulai pencarian untuk: "${search}" di halaman: ${page}`); // Log untuk debugging
 
-            // Permintaan tanpa header Authorization
+        try {
 
             const res = await axios.get(`${API_URL}/products`, {
 
@@ -112,6 +110,8 @@ const ProductList = () => {
             setCurrentPage(res.data.currentPage);
 
             setTotalPages(res.data.totalPages);
+
+            console.log(`Pencarian berhasil. Ditemukan ${res.data.products.length} produk.`);
 
         } catch (err) {
 
@@ -141,16 +141,18 @@ const ProductList = () => {
 
         }
 
-    }, [setProducts, setCurrentPage, setTotalPages, setLoading, setErrorMessage, setShowErrorModal]); // Dependensi diperbarui
+    }, [setProducts, setCurrentPage, setTotalPages, setLoading, setErrorMessage, setShowErrorModal]);
 
 
     const debouncedFetchRef = useRef(
 
         debounce((page, search) => {
 
+            console.log(`Fungsi debounced dipanggil dengan: "${search}"`); // Log saat debounce terpicu
+
             fetchProducts(page, search);
 
-        }, 500)
+        }, 500) // Penundaan 500ms
 
     );
 
@@ -161,38 +163,40 @@ const ProductList = () => {
 
         if (currentDebounce) {
 
-            currentDebounce.cancel();
+            currentDebounce.cancel(); // Batalkan setiap panggilan debounce yang tertunda
 
         }
 
-        fetchProducts(currentPage, searchQuery); // Selalu ambil data
+        fetchProducts(currentPage, searchQuery); // Panggilan awal atau saat halaman berubah
 
         return () => {
 
             if (currentDebounce) {
 
-                currentDebounce.cancel();
+                currentDebounce.cancel(); // Bersihkan saat komponen unmount atau dependensi berubah
 
             }
 
         };
 
-    }, [currentPage, fetchProducts, searchQuery]); // Dependensi diperbarui
+    }, [currentPage, fetchProducts, searchQuery]);
 
 
     useEffect(() => {
 
         const currentDebounce = debouncedFetchRef.current;
 
+        console.log(`searchQuery berubah menjadi: "${searchQuery}"`); // Log setiap kali input berubah
+
         if (searchQuery !== '') {
 
-            currentDebounce(1, searchQuery);
+            currentDebounce(1, searchQuery); // Memicu fungsi debounced
 
         } else {
 
-            currentDebounce.cancel();
+            currentDebounce.cancel(); // Batalkan debounce jika input kosong
 
-            fetchProducts(1, ''); // Ambil data saat search dibersihkan
+            fetchProducts(1, ''); // Ambil data segera saat input pencarian dibersihkan
 
         }
 
@@ -206,7 +210,7 @@ const ProductList = () => {
 
         };
 
-    }, [searchQuery, fetchProducts]); // Dependensi diperbarui
+    }, [searchQuery, fetchProducts]);
 
 
     const handlePageChange = (page) => {
@@ -234,8 +238,6 @@ const ProductList = () => {
         setShowConfirmationModal(false);
 
         try {
-
-            // Permintaan tanpa header Authorization
 
             await axios.delete(`${API_URL}/products/${productIdToDelete}`);
 
@@ -268,7 +270,7 @@ const ProductList = () => {
     };
 
 
-    if (loading) return <Container className="text-center mt-5"><div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div></Container>; // Baris ini telah diperbaiki
+    if (loading) return <Container className="text-center mt-5"><div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div></Container>;
 
 
     return (
@@ -317,7 +319,7 @@ const ProductList = () => {
 
                             <tr>
 
-                                <th className="text-center">ID</th>
+                                <th className="text-center">No.</th> {/* Label kolom untuk nomor urut */}
 
                                 <th className="text-center">Nama</th>
 
@@ -335,11 +337,13 @@ const ProductList = () => {
 
                         <tbody>
 
-                            {products.map((product) => (
+                            {products.map((product, index) => ( // Menggunakan 'index' untuk nomor urut
 
                                 <tr key={product.id}>
 
-                                    <td className="text-center">{product.id}</td>
+                                    {/* Menampilkan nomor urut yang disesuaikan dengan halaman */}
+
+                                    <td className="text-center">{(currentPage - 1) * 10 + index + 1}</td>
 
                                     <td>{product.name}</td>
 
@@ -483,8 +487,6 @@ const ProductForm = () => {
 
                 try {
 
-                    // Permintaan tanpa header Authorization
-
                     const res = await axios.get(`${API_URL}/products/${id}`);
 
                     const product = res.data;
@@ -515,7 +517,7 @@ const ProductForm = () => {
 
                     setShowErrorModal(true);
 
-                    navigate('/'); // Redirect ke halaman utama (produk) jika produk tidak ditemukan atau error
+                    navigate('/');
 
                 } finally {
 
@@ -544,19 +546,15 @@ const ProductForm = () => {
 
             if (id) {
 
-                // Permintaan tanpa header Authorization
-
                 await axios.put(`${API_URL}/products/${id}`, productData);
 
             } else {
-
-                // Permintaan tanpa header Authorization
 
                 await axios.post(`${API_URL}/products`, productData);
 
             }
 
-            navigate('/'); // Kembali ke daftar produk setelah berhasil
+            navigate('/');
 
         } catch (err) {
 
@@ -857,25 +855,15 @@ function App() {
 
         <Router>
 
-            {/* AuthProvider tidak lagi diperlukan karena autentikasi dihapus */}
-
-            {/* axios.defaults.headers.common['Authorization'] juga tidak diatur di sini */}
-
             <AppNavbar />
 
             <Routes>
 
-                {/* Halaman utama langsung menampilkan ProductList tanpa proteksi rute */}
-
                 <Route path="/" element={<ProductList />} />
-
-                {/* Tambah/Edit Produk juga tanpa proteksi rute */}
 
                 <Route path="/products/add" element={<ProductForm />} />
 
                 <Route path="/products/edit/:id" element={<ProductForm />} />
-
-                {/* Rute catch-all untuk halaman tidak ditemukan */}
 
                 <Route path="*" element={<NotFound />} />
 
