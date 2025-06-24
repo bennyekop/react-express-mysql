@@ -1,0 +1,34 @@
+    /* File: src/index.css */
+
+    /* Deskripsi: Gaya CSS global untuk aplikasi React Anda. */
+
+
+    body {
+
+      margin: 0;
+
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+
+        sans-serif;
+
+      -webkit-font-smoothing: antialiased;
+
+      -moz-osx-font-smoothing: grayscale;
+
+      background-color: #f8f9fa; /* Warna latar belakang umum */
+
+    }
+
+
+    code {
+
+      font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+
+        monospace;
+
+    }
+
+
+    /* Tambahkan gaya global kustom lainnya di sini jika diperlukan */
